@@ -746,6 +746,7 @@
       <div style="display:flex; gap:8px; align-items:center;">
         <span style="font-size:0.75rem; color:var(--text-muted);" id="history-count">0 trades</span>
         <button onclick="exportTrades()" style="background:var(--accent-blue);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">⬇️ Export CSV</button>
+        <button onclick="clearHistory()" style="background:transparent;color:var(--accent-red);border:1px solid var(--accent-red);border-radius:6px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">🗑️ Clear History</button>
       </div>
     </div>
     <!-- Stats Row -->
@@ -2094,6 +2095,73 @@ function exportTrades() {
     document.body.appendChild(a); a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+
+// ── Clear History ─────────────────────────────────────────────────
+function clearHistory() {
+    const count = tradingEngine.state.history ? tradingEngine.state.history.length : 0;
+    if (count === 0) { alert('Trade history is already empty!'); return; }
+
+    // Show custom confirm modal
+    const modal = document.createElement('div');
+    modal.id = 'clear-modal';
+    modal.style.cssText = `
+        position:fixed; inset:0; background:rgba(0,0,0,0.7);
+        display:flex; align-items:center; justify-content:center;
+        z-index:99999;
+    `;
+    modal.innerHTML = `
+        <div style="
+            background:var(--bg-secondary); border:1px solid var(--accent-red);
+            border-radius:14px; padding:32px 36px; max-width:420px; width:90%;
+            box-shadow:0 12px 40px rgba(0,0,0,0.6); text-align:center;
+        ">
+            <div style="font-size:2.5rem; margin-bottom:12px;">🗑️</div>
+            <h3 style="margin:0 0 8px 0; font-size:1.2rem; color:var(--accent-red);">Clear Trade History?</h3>
+            <p style="color:var(--text-secondary); font-size:0.875rem; margin:0 0 8px 0;">
+                This will permanently delete <strong style="color:var(--text-primary);">${count} trade${count!==1?'s':''}</strong> from history.
+            </p>
+            <p style="color:var(--text-muted); font-size:0.78rem; margin:0 0 24px 0;">
+                ⚠️ This action cannot be undone. Export your data first if needed.
+            </p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <button onclick="document.getElementById('clear-modal').remove()" style="
+                    background:transparent; color:var(--text-secondary); border:1px solid var(--border-bright);
+                    border-radius:8px; padding:10px 24px; font-size:0.875rem; font-weight:600;
+                    cursor:pointer; font-family:Inter,sans-serif; min-width:100px;
+                ">Cancel</button>
+                <button onclick="confirmClearHistory()" style="
+                    background:var(--accent-red); color:#fff; border:none;
+                    border-radius:8px; padding:10px 24px; font-size:0.875rem; font-weight:600;
+                    cursor:pointer; font-family:Inter,sans-serif; min-width:100px;
+                ">Yes, Clear All</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    // Close on backdrop click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+async function confirmClearHistory() {
+    const modal = document.getElementById('clear-modal');
+    if (modal) modal.remove();
+
+    // Clear history and reset stats
+    tradingEngine.state.history      = [];
+    tradingEngine.state.daily_stats.trades = 0;
+    tradingEngine.state.daily_stats.loss   = 0;
+    tradingEngine.state.daily_stats.profit = 0;
+
+    await tradingEngine.saveState();
+    renderHistory();
+    uiController.update();
+
+    // Show success toast
+    Toast.show('✅ Trade history cleared successfully', 'success');
 }
 
 // ── Password & Login ──────────────────────────────────────────────
