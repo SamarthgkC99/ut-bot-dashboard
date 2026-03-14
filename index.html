@@ -509,6 +509,24 @@
   }
   .btn-login:hover { background: #3b82f6; box-shadow: 0 0 18px rgba(96,165,250,0.35); }
   .btn-login:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* History Tabs */
+  .hist-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: Inter, sans-serif;
+    transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+  .hist-tab:hover { color: var(--text-primary); }
+  .hist-tab-active { color: var(--accent-blue) !important; border-bottom-color: var(--accent-blue) !important; }
+
 </style>
 </head>
 <body>
@@ -721,27 +739,58 @@
     </div>
   </div>
 
-  <!-- History -->
+  <!-- Combined History -->
   <div class="card" style="grid-column: 1 / -1;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-      <h2 style="margin:0; border:none; padding:0;">📜 Trade History</h2>
-      <div style="display:flex; gap:8px; align-items:center;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+      <h2 style="margin:0; border:none; padding:0;">📜 Combined Trade History</h2>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <span style="font-size:0.75rem; color:var(--text-muted);" id="history-count">0 trades</span>
-        <button onclick="exportTrades()" style="
-          background:var(--accent-blue); color:#fff; border:none; border-radius:6px;
-          padding:7px 14px; font-size:0.8rem; font-weight:600; cursor:pointer;
-          font-family:Inter,sans-serif; transition:background 0.2s;
-          display:flex; align-items:center; gap:5px;"
-          onmouseover="this.style.background='#3b82f6'"
-          onmouseout="this.style.background='var(--accent-blue)'">
-          ⬇️ Export CSV
-        </button>
+        <button onclick="exportTrades('all')" style="background:var(--accent-blue);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">⬇️ Export All</button>
+        <button onclick="exportTrades('bot1')" style="background:var(--accent-green);color:#000;border:none;border-radius:6px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">⬇️ Bot 1</button>
+        <button onclick="exportTrades('bot2')" style="background:var(--accent-orange);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">⬇️ Bot 2</button>
       </div>
     </div>
+
+    <!-- Tabs -->
+    <div style="display:flex; gap:4px; margin-bottom:14px; border-bottom:1px solid var(--border-color); padding-bottom:0;">
+      <button id="tab-all"  onclick="switchTab('all')"  class="hist-tab hist-tab-active">All Trades</button>
+      <button id="tab-bot1" onclick="switchTab('bot1')" class="hist-tab">🤖 Bot 1 (UT Bot)</button>
+      <button id="tab-bot2" onclick="switchTab('bot2')" class="hist-tab">⚡ Bot 2 (Scalping)</button>
+    </div>
+
+    <!-- Stats Row -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px; margin-bottom:14px;">
+      <div style="background:var(--bg-tertiary);padding:10px;border-radius:8px;border:1px solid var(--border-color);text-align:center;">
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Total Trades</div>
+        <div style="font-size:1.2rem;font-weight:700;margin-top:4px;" id="stat-total">0</div>
+      </div>
+      <div style="background:var(--bg-tertiary);padding:10px;border-radius:8px;border:1px solid var(--border-color);text-align:center;">
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Win Rate</div>
+        <div style="font-size:1.2rem;font-weight:700;margin-top:4px;" id="stat-wr">0%</div>
+      </div>
+      <div style="background:var(--bg-tertiary);padding:10px;border-radius:8px;border:1px solid var(--border-color);text-align:center;">
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Total P/L</div>
+        <div style="font-size:1.2rem;font-weight:700;margin-top:4px;" id="stat-pl">₹0</div>
+      </div>
+      <div style="background:var(--bg-tertiary);padding:10px;border-radius:8px;border:1px solid var(--border-color);text-align:center;">
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Best Trade</div>
+        <div style="font-size:1.2rem;font-weight:700;margin-top:4px;color:var(--accent-green);" id="stat-best">₹0</div>
+      </div>
+      <div style="background:var(--bg-tertiary);padding:10px;border-radius:8px;border:1px solid var(--border-color);text-align:center;">
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Worst Trade</div>
+        <div style="font-size:1.2rem;font-weight:700;margin-top:4px;color:var(--accent-red);" id="stat-worst">₹0</div>
+      </div>
+      <div style="background:var(--bg-tertiary);padding:10px;border-radius:8px;border:1px solid var(--border-color);text-align:center;">
+        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;">Avg Duration</div>
+        <div style="font-size:1.2rem;font-weight:700;margin-top:4px;" id="stat-dur">--</div>
+      </div>
+    </div>
+
     <div style="overflow-x:auto;">
       <table>
         <thead>
           <tr>
+            <th>Bot</th>
             <th>Date &amp; Time</th>
             <th>Type</th>
             <th>Entry</th>
@@ -764,32 +813,52 @@
 
 <script>
 // ── JSONBin Sync (cross-device state) ────────────────────────────
-const JSONBIN_KEY = '$2a$10$89MGgEAgjXyETvQ4x/vEpO.2NeEiLaR7nr.4oYSl1uaOr3VihCFtu';
+const JSONBIN_KEY  = '$2a$10$89MGgEAgjXyETvQ4x/vEpO.2NeEiLaR7nr.4oYSl1uaOr3VihCFtu';
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
-let _binId = localStorage.getItem('utbot_bin_id') || '69b2d796c3097a1dd51cc797';
+
+// Bot 1 bin ID (UT Bot)
+let _binId     = localStorage.getItem('utbot_bin_id')  || '69b2d796c3097a1dd51cc797';
+// Bot 2 bin ID (Advanced Scalping) — paste your Bot 2 JSONBin ID here
+let _binId2    = localStorage.getItem('advbot_bin_id') || '69b5226eb7ec241ddc69516d';
+
 let _lastSaveTime = 0;
 let _lastRemoteUpdate = 0;
 
+// ── Fetch state from any bin ──────────────────────────────────────
+async function _fetchBinState(binId) {
+    try {
+        const res  = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, {
+            headers: { 'X-Master-Key': JSONBIN_KEY }
+        });
+        const data = await res.json();
+        if (data.record?.empty) return null;
+        return data.record || null;
+    } catch(e) { console.warn('JSONBin read error', binId, e); return null; }
+}
+
+// Combined history from both bins
+let _bot2History = [];
+let _bot2State   = null;
+
+async function _loadBot2State() {
+    if (_binId2 === 'YOUR_BOT2_JSONBIN_ID_HERE') return;
+    const state = await _fetchBinState(_binId2);
+    if (state) {
+        _bot2State   = state;
+        _bot2History = (state.history || []).map(h => ({ ...h, _bot: 'Bot 2' }));
+    }
+}
+
+// Poll Bot 2 every 10 seconds
+setInterval(async () => {
+    await _loadBot2State();
+    renderCombinedHistory();
+}, 10000);
+
 async function _fbGetState() {
     try {
-        // Create bin on first run
-        if (!_binId) {
-            const res = await fetch(`${JSONBIN_BASE}/b`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_KEY,
-                    'X-Bin-Name': 'utbot-state',
-                    'X-Bin-Private': 'true'
-                },
-                body: JSON.stringify({ empty: true })
-            });
-            const data = await res.json();
-            _binId = data.metadata?.id;
-            if (_binId) localStorage.setItem('utbot_bin_id', _binId);
-            return null; // fresh bin, no state yet
-        }
-        const res = await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`, {
+        if (!_binId) return null;
+        const res  = await fetch(`${JSONBIN_BASE}/b/${_binId}/latest`, {
             headers: { 'X-Master-Key': JSONBIN_KEY }
         });
         const data = await res.json();
@@ -1969,28 +2038,8 @@ class UIController {
             window.lastLog = null;
         }
 
-        // History
-        this.elements.historyBody.innerHTML = '';
-        const histCount = document.getElementById('history-count');
-        if (histCount) histCount.textContent = s.history.length + ' trade' + (s.history.length !== 1 ? 's' : '');
-        s.history.slice().reverse().forEach(h => {
-            const dt    = h.time ? new Date(h.time).toLocaleString('en-IN', {timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '--';
-            const dur   = (h.opened_at && h.time) ? formatDuration(h.time - h.opened_at) : '--';
-            const size  = h.amount ? h.amount + ' BTC' : '--';
-            const rr    = h.rr_mode || '--';
-            const row = `<tr>
-                <td style="white-space:nowrap; font-size:0.8rem;">${dt}</td>
-                <td><span style="font-weight:700; color:${h.type==='LONG'?'var(--accent-green)':'var(--accent-red)'}">${h.type}</span></td>
-                <td>${Utils.formatPrice(h.entry_price)}</td>
-                <td>${Utils.formatPrice(h.exit_price)}</td>
-                <td style="font-size:0.82rem;">${size}</td>
-                <td><span style="background:${rr==='1:1.5'?'rgba(251,191,36,0.15)':'rgba(96,165,250,0.12)'}; color:${rr==='1:1.5'?'var(--accent-yellow)':'var(--accent-blue)'}; padding:2px 7px; border-radius:4px; font-size:0.75rem; font-weight:700;">${rr}</span></td>
-                <td style="font-size:0.82rem; color:var(--text-secondary);">${dur}</td>
-                <td class="${h.profit_inr >= 0 ? 'profit':'loss'}">${Utils.formatCurrency(h.profit_inr)}</td>
-                <td style="font-size:0.82rem;">${h.exit_reason}</td>
-            </tr>`;
-            this.elements.historyBody.innerHTML += row;
-        });
+        // History — combined render
+        renderCombinedHistory();
 
         // Perf
         this.elements.totalTrades.textContent = s.history.length;
@@ -2002,6 +2051,77 @@ class UIController {
     }
 }
 
+
+
+// ── Combined History ──────────────────────────────────────────────
+let _currentTab = 'all';
+
+function switchTab(tab) {
+    _currentTab = tab;
+    document.querySelectorAll('.hist-tab').forEach(b => b.classList.remove('hist-tab-active'));
+    const el = document.getElementById('tab-' + tab);
+    if (el) el.classList.add('hist-tab-active');
+    renderCombinedHistory();
+}
+
+function renderCombinedHistory() {
+    const s       = tradingEngine.state;
+    const bot1    = (s.history || []).map(h => ({ ...h, _bot: 'Bot 1' }));
+    const bot2    = _bot2History || [];
+
+    let trades;
+    if      (_currentTab === 'bot1') trades = bot1;
+    else if (_currentTab === 'bot2') trades = bot2;
+    else                             trades = [...bot1, ...bot2].sort((a,b) => (b.time||0) - (a.time||0));
+
+    // Stats
+    const total  = trades.length;
+    const wins   = trades.filter(t => t.profit_inr > 0).length;
+    const totalPL= trades.reduce((a,b) => a + (b.profit_inr||0), 0);
+    const best   = total ? Math.max(...trades.map(t => t.profit_inr||0)) : 0;
+    const worst  = total ? Math.min(...trades.map(t => t.profit_inr||0)) : 0;
+    const durs   = trades.filter(t => t.opened_at && t.time).map(t => t.time - t.opened_at);
+    const avgDur = durs.length ? durs.reduce((a,b)=>a+b,0)/durs.length : 0;
+
+    const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+    set('history-count', total + ' trade' + (total !== 1 ? 's' : ''));
+    set('stat-total', total);
+    set('stat-wr',    total ? Math.round(wins/total*100)+'%' : '0%');
+    const plEl = document.getElementById('stat-pl');
+    if (plEl) { plEl.textContent = Utils.formatCurrency(totalPL); plEl.className = totalPL >= 0 ? 'profit' : 'loss'; }
+    const bestEl = document.getElementById('stat-best');
+    if (bestEl) bestEl.textContent = Utils.formatCurrency(best);
+    const worstEl = document.getElementById('stat-worst');
+    if (worstEl) worstEl.textContent = Utils.formatCurrency(worst);
+    set('stat-dur', avgDur ? formatDuration(avgDur) : '--');
+
+    // Table
+    const tbody = document.getElementById('history-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    trades.forEach(h => {
+        const isBot2 = h._bot === 'Bot 2';
+        const botBadge = isBot2
+            ? '<span style="background:rgba(249,115,22,0.15);color:var(--accent-orange);padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:700;">⚡ Bot 2</span>'
+            : '<span style="background:rgba(96,165,250,0.12);color:var(--accent-blue);padding:2px 6px;border-radius:4px;font-size:0.72rem;font-weight:700;">🤖 Bot 1</span>';
+        const dt  = h.time ? new Date(h.time).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '--';
+        const dur = (h.opened_at && h.time) ? formatDuration(h.time - h.opened_at) : '--';
+        const size= h.amount ? h.amount + ' BTC' : '--';
+        const rr  = h.rr_mode || '--';
+        tbody.innerHTML += `<tr>
+            <td>${botBadge}</td>
+            <td style="white-space:nowrap;font-size:0.8rem;">${dt}</td>
+            <td><span style="font-weight:700;color:${h.type==='LONG'?'var(--accent-green)':'var(--accent-red)'}">${h.type}</span></td>
+            <td>${Utils.formatPrice(h.entry_price)}</td>
+            <td>${Utils.formatPrice(h.exit_price)}</td>
+            <td style="font-size:0.82rem;">${size}</td>
+            <td><span style="background:${rr==='1:1.5'?'rgba(251,191,36,0.15)':'rgba(96,165,250,0.12)'};color:${rr==='1:1.5'?'var(--accent-yellow)':'var(--accent-blue)'};padding:2px 7px;border-radius:4px;font-size:0.75rem;font-weight:700;">${rr}</span></td>
+            <td style="font-size:0.82rem;color:var(--text-secondary);">${dur}</td>
+            <td class="${h.profit_inr>=0?'profit':'loss'}">${Utils.formatCurrency(h.profit_inr)}</td>
+            <td style="font-size:0.82rem;">${h.exit_reason}</td>
+        </tr>`;
+    });
+}
 
 // ── Trade Export ──────────────────────────────────────────────────
 function formatDuration(ms) {
@@ -2015,19 +2135,25 @@ function formatDuration(ms) {
     return s + 's';
 }
 
-function exportTrades() {
-    const s = tradingEngine.state;
-    if (!s.history || s.history.length === 0) {
-        alert('No trades to export yet!');
-        return;
-    }
-    const headers = ['Date & Time (IST)', 'Type', 'Entry ($)', 'Exit ($)', 'Size (BTC)', 'RR Mode', 'Duration', 'P/L (INR)', 'Reason'];
-    const rows = s.history.map(h => {
+function exportTrades(filter) {
+    filter = filter || 'all';
+    const bot1 = (tradingEngine.state.history || []).map(h => ({ ...h, _bot: 'Bot 1' }));
+    const bot2 = _bot2History || [];
+    let trades;
+    if      (filter === 'bot1') trades = bot1;
+    else if (filter === 'bot2') trades = bot2;
+    else                        trades = [...bot1, ...bot2].sort((a,b) => (b.time||0) - (a.time||0));
+
+    if (!trades.length) { alert('No trades to export!'); return; }
+
+    const headers = ['Bot', 'Date & Time (IST)', 'Type', 'Entry ($)', 'Exit ($)', 'Size (BTC)', 'RR Mode', 'Duration', 'P/L (INR)', 'Reason'];
+    const rows = trades.map(h => {
         const dt  = h.time ? new Date(h.time).toLocaleString('en-IN', {timeZone:'Asia/Kolkata'}) : '';
         const dur = (h.opened_at && h.time) ? formatDuration(h.time - h.opened_at) : '';
         return [
+            h._bot || '',
             '"' + dt + '"',
-            h.type,
+            h.type || '',
             h.entry_price ? h.entry_price.toFixed(2) : '',
             h.exit_price  ? h.exit_price.toFixed(2)  : '',
             h.amount || '',
@@ -2037,12 +2163,12 @@ function exportTrades() {
             '"' + (h.exit_reason || '') + '"'
         ].join(',');
     });
-    const csv     = [headers.join(','), ...rows].join('\n');
-    const blob    = new Blob([csv], { type: 'text/csv' });
-    const url     = URL.createObjectURL(blob);
-    const a       = document.createElement('a');
-    a.href        = url;
-    a.download    = 'trades_' + new Date().toISOString().slice(0,10) + '.csv';
+    const csv  = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'trades_' + filter + '_' + new Date().toISOString().slice(0,10) + '.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -2137,6 +2263,7 @@ let saveInterval = null;
 
 async function startApp() {
     await tradingEngine.init();
+    await _loadBot2State();
     uiController.update();
     await mainLoop();
     loopInterval = setInterval(mainLoop, 5000);
